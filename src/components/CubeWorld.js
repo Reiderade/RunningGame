@@ -1,46 +1,57 @@
-import { Canvas } from '@react-three/fiber'
+import { Canvas, useFrame } from '@react-three/fiber'
 import { Perf } from 'r3f-perf'
-import { Stars } from '@react-three/drei'
+import { useEffect, useRef, useState, Suspense } from 'react'
 
+import { useStore } from '../state/useStore'
 
-import { useEffect, useRef, useState } from 'react'
-
-import Player from './Player'
+// THREE components
+import Ship from './Ship'
 import Ground from './Ground'
 import Text from './Text'
-import KeyboardControls from './KeyboardControls'
 import Effects from './Effects'
 import Skybox from './Skybox'
+import Cubes from './Cubes'
+import Walls from './Walls'
+
+// State/dummy components
+import KeyboardControls from './KeyboardControls'
+import GameState from './GameState'
+
+// HTML components
+import Overlay from './html/Overlay'
+import Hud from './html/Hud'
+import GameOverScreen from './html/GameOverScreen'
+
 
 export default function CubeWorld({ color, bgColor }) {
-  const [light, setLight] = useState()
+  const directionalLight = useStore((s) => s.directionalLight)
 
   return (
-    <Canvas dpr={[1, 1.5]} shadows style={{ background: `${bgColor}` }}>
-      <Skybox />
-      <directionalLight
-        ref={setLight}
-        intensity={4}
-        shadow-bias={-0.001}
-        shadow-mapSize={[4096, 4096]}
-        shadow-camera-left={-150}
-        shadow-camera-right={150}
-        shadow-camera-top={150}
-        shadow-camera-bottom={-150}
-        castShadow
-        position={[0, Math.PI, 0]}
-      />
-      <fog attach="fog" args={['hotpink', 10, 500]} />
-      <ambientLight intensity={0.1} />
-      <Player>
-        {light && <primitive object={light.target} />}
-      </Player>
-      <Ground groundColor={bgColor} />
-      <Text />
-      <Perf />
-      <KeyboardControls />
-      <Effects />
-    </Canvas>
+    <>
+      <Canvas dpr={[1, 1.5]} shadows style={{ background: `${bgColor}` }}>
+        <GameState />
+        <Skybox />
+        <directionalLight
+          ref={directionalLight}
+          intensity={3} // 4
+          position={[0, Math.PI, 0]}
+        />
+        <ambientLight intensity={0.1} />
+        <Ship>
+          {directionalLight.current && <primitive object={directionalLight.current.target} />}
+        </Ship>
+        <Walls />
+        <Cubes />
+        <Ground groundColor={bgColor} />
+        <Text />
+        <Perf />
+        <KeyboardControls />
+        <Effects />
+      </Canvas>
+      <Hud />
+      <GameOverScreen />
+      <Overlay />
+    </>
   )
 }
 
