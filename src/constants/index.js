@@ -17,9 +17,9 @@ export const CUBE_SIZE = 20
 
 export const CUBE_AMOUNT = 60
 
-export const INITIAL_GAME_SPEED = 0.6
+export const INITIAL_GAME_SPEED = 0.8
 
-export const GAME_SPEED_MULTIPLIER = 0.3
+export const GAME_SPEED_MULTIPLIER = 0.2
 
 export const WALL_RADIUS = 40
 

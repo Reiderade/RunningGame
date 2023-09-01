@@ -14,8 +14,7 @@ import { useStore, mutation } from '../state/useStore'
 const v = new Vector3()
 
 function ShipModel(props, { children }) {
-  const { nodes, materials } = useGLTF(shipModel)
-
+  const { nodes, materials } = useGLTF(shipModel, "https://www.gstatic.com/draco/versioned/decoders/1.4.0/")
   // tie ship and camera ref to store to allow getting at them elsewhere
   const ship = useStore((s) => s.ship)
   const camera = useStore((s) => s.camera)
@@ -230,12 +229,15 @@ function ShipModel(props, { children }) {
       }
     }
 
-    innerConeExhaust.current.scale.z = fastSine / 15
-    innerConeExhaust.current.scale.x = innerConeScaleFactor.current + fastSine / 15
-    coneExhaust.current.scale.z = fastSine / 15
-    coneExhaust.current.scale.x = 0.85 + fastSine / 15
-    outerConeExhaust.current.scale.z = 0.9 + fastSine / 15
-    outerConeExhaust.current.scale.x = 0.9 + fastSine / 15
+
+    const scaleFactor = mutation.currentMusicLevel > 0.8 ? mutation.currentMusicLevel + 0.2 : 1
+
+    innerConeExhaust.current.scale.z = (fastSine / 15)
+    innerConeExhaust.current.scale.x = (innerConeScaleFactor.current + fastSine / 15) * scaleFactor
+    coneExhaust.current.scale.z = (fastSine / 15)
+    coneExhaust.current.scale.x = (0.85 + fastSine / 15) * scaleFactor
+    outerConeExhaust.current.scale.z = (0.9 + fastSine / 15)
+    outerConeExhaust.current.scale.x = (0.9 + fastSine / 15) * scaleFactor
 
     bodyDetail.current.material.color = mutation.globalColor
   })
@@ -283,7 +285,7 @@ function ShipModel(props, { children }) {
 }
 
 
-useGLTF.preload(shipModel)
+useGLTF.preload(shipModel, "https://www.gstatic.com/draco/versioned/decoders/1.4.0/")
 
 function Loading() {
   return (

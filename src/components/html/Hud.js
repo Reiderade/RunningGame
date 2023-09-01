@@ -24,6 +24,7 @@ export default function Hud() {
   const [left, setLeftPressed] = useState(false)
   const [right, setRightPressed] = useState(false)
 
+
   // performance optimization for the rapidly updating speedometer and score - see https://github.com/pmndrs/racing-game/blob/main/src/ui/Speed/Text.tsx
   let then = Date.now()
 
@@ -45,6 +46,7 @@ export default function Hud() {
         scoreRef.current.innerText = getScore()
       }
 
+      // eslint-disable-next-line
       then = now
     }
   }))

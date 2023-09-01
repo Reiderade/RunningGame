@@ -24,12 +24,7 @@ export default function Arch() {
   const arch10 = useRef()
 
   const levelColor = (base) => {
-    if (base + level >= 6) {
-      const subtractor = 6 * Math.floor((base + level) / 6)
-      return base + level - subtractor
-    } else {
-      return base + level
-    }
+    return (base + level) % LEVEL_SIZE
   }
 
   useFrame((state, delta) => {
@@ -68,6 +63,17 @@ export default function Arch() {
       arch8.current.material.color = COLORS[levelColor(0)].three
       arch9.current.material.color = COLORS[levelColor(0)].three
       arch10.current.material.color = COLORS[levelColor(0)].three
+    }
+
+
+    const scaleFactor = mutation.currentMusicLevel
+
+    if (scaleFactor > 0.8 && arches.current.scale.x > 0.95) {
+      arches.current.scale.x -= scaleFactor * delta * 1
+      arches.current.scale.y -= scaleFactor * delta * 1
+    } else if (arches.current.scale.x < 1) {
+      arches.current.scale.x += scaleFactor * delta * 0.5
+      arches.current.scale.y += scaleFactor * delta * 0.5
     }
   })
 

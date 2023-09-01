@@ -35,8 +35,8 @@ export default function GameState() {
   useFrame((state, delta) => {
 
     // acceleration logic
-    const accelDelta = 1 * delta * 0.25
-    if (!mutation.gameOver) {
+    const accelDelta = 1 * delta * 0.15
+    if (gameStarted && !mutation.gameOver) {
       if (mutation.gameSpeed < mutation.desiredSpeed) {
         setIsSpeedingUp(true)
         if (mutation.gameSpeed + accelDelta > mutation.desiredSpeed) {
@@ -54,7 +54,7 @@ export default function GameState() {
       mutation.score = Math.abs(ship.current.position.z) - 10
 
       // optimization, instead of calculating this for all elements we do it once per frame here
-      mutation.shouldShiftItems = ship.current.position.z < -PLANE_SIZE && ship.current.position.z < mutation.currentLevelLength - 400
+      mutation.shouldShiftItems = ship.current.position.z < -400 && ship.current.position.z < mutation.currentLevelLength - 400 && ship.current.position.z > mutation.currentLevelLength - 1000
     }
 
     if (gameStarted && mutation.gameOver) {

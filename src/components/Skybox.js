@@ -23,8 +23,18 @@ function Sun() {
       sun.current.position.x = ship.current.position.x
     }
 
+    const scaleFactor = mutation.currentMusicLevel
+
     sun.current.scale.x += Math.sin(clock.getElapsedTime() * 3) / 3000
     sun.current.scale.y += Math.sin(clock.getElapsedTime() * 3) / 3000
+
+    if (scaleFactor >= 0.8 && sun.current.scale.x < 1.05) {
+      sun.current.scale.x += scaleFactor * delta * 2
+      sun.current.scale.y += scaleFactor * delta * 2
+    } else if (sun.current.scale.x > 1) {
+      sun.current.scale.x -= scaleFactor * delta * 0.5
+      sun.current.scale.y -= scaleFactor * delta * 0.5
+    }
   })
 
   return (
