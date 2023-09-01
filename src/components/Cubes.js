@@ -1,15 +1,15 @@
-import * as THREE from 'three'
+import { Object3D } from 'three'
 import { useRef, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
 
-import { CUBE_AMOUNT, CUBE_SIZE, PLANE_SIZE, COLORS, WALL_RADIUS, LEVEL_SIZE } from '../constants'
+import { CUBE_AMOUNT, CUBE_SIZE, PLANE_SIZE, COLORS, WALL_RADIUS, LEVEL_SIZE, LEFT_BOUND, RIGHT_BOUND } from '../constants'
 import { useStore, mutation } from '../state/useStore'
 
 import randomInRange from '../util/randomInRange'
 import distance2D from '../util/distance2D'
 
-const negativeBound = -(PLANE_SIZE / 2) + WALL_RADIUS / 2
-const positiveBound = (PLANE_SIZE / 2) - WALL_RADIUS / 2
+const negativeBound = LEFT_BOUND + WALL_RADIUS / 2
+const positiveBound = RIGHT_BOUND - WALL_RADIUS / 2
 
 export default function InstancedCubes() {
   const mesh = useRef()
@@ -18,7 +18,7 @@ export default function InstancedCubes() {
   const ship = useStore(s => s.ship)
   const level = useStore(s => s.level)
 
-  const dummy = useMemo(() => new THREE.Object3D(), [])
+  const dummy = useMemo(() => new Object3D(), [])
   const cubes = useMemo(() => {
     // Setup initial cube positions
     const temp = []
@@ -32,28 +32,47 @@ export default function InstancedCubes() {
     return temp
   }, [])
 
+  const diamondStart = useMemo(() => -(level * PLANE_SIZE * LEVEL_SIZE) - PLANE_SIZE * (LEVEL_SIZE - 2.5), [level])
+  const diamondEnd = useMemo(() => -(level * PLANE_SIZE * LEVEL_SIZE) - PLANE_SIZE * (LEVEL_SIZE), [level])
+
   useFrame((state, delta) => {
+    let isWithinDiamond = false
+    if (ship.current) {
+      if (ship.current.position.z > diamondStart || ship.current.position.z < diamondEnd) {
+        isWithinDiamond = true
+      }
+    }
+
     cubes.forEach((cube, i) => {
       if (ship.current) {
-        const distanceToShip = distance2D(ship.current.position.x, ship.current.position.z, cube.x, cube.z)
+        if (cube.z - ship.current.position.z > -15) { // No need to run the rather expensive distance function if the ship is too far away
+          if (cube.x - ship.current.position.x > -15 || cube.x - ship.current.position.x < 15) {
+            const distanceToShip = distance2D(ship.current.position.x, ship.current.position.z, cube.x, cube.z)
 
-        if (distanceToShip < 12) {
-          mutation.gameSpeed = 0
-          mutation.gameOver = true
+            if (distanceToShip < 12) {
+              mutation.gameSpeed = 0
+              mutation.gameOver = true
+            }
+          }
         }
 
-
         if (cube.z - ship.current.position.z > 15) {
-          const currentLevelZPos = -(level * PLANE_SIZE * LEVEL_SIZE) // 4
-          const diamondStart = currentLevelZPos - PLANE_SIZE * (LEVEL_SIZE - 2.5) // 1.5
-          const diamondEnd = currentLevelZPos - PLANE_SIZE * (LEVEL_SIZE) // 3
-
-          if (ship.current.position.z > diamondStart || ship.current.position.z < diamondEnd) {
+          if (isWithinDiamond) {
             cube.z = ship.current.position.z - PLANE_SIZE + randomInRange(-500, 0)
+            cube.y = -CUBE_SIZE
             cube.x = randomInRange(negativeBound, positiveBound)
           } else {
-            cube.z = ship.current.position.z - (PLANE_SIZE * 3) + randomInRange(-500, 300)
+            cube.z = ship.current.position.z - (PLANE_SIZE * 3.3) + randomInRange(-500, 0)
+            cube.y = -CUBE_SIZE
             cube.x = randomInRange(negativeBound, positiveBound)
+          }
+        }
+
+        if (cube.y < CUBE_SIZE / 2) {
+          if (cube.y + delta * 100 > CUBE_SIZE / 2) {
+            cube.y = CUBE_SIZE / 2
+          } else {
+            cube.y += delta * 100
           }
         }
       }

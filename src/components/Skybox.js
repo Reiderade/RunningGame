@@ -1,7 +1,7 @@
-import { Suspense, useState, useRef, useMemo, useLayoutEffect } from 'react'
+import { Suspense, useRef, useMemo, useLayoutEffect } from 'react'
 import { useThree, useFrame } from '@react-three/fiber'
 import { useTexture, Stars } from '@react-three/drei'
-import * as THREE from 'three'
+import { Color, BackSide, MirroredRepeatWrapping } from 'three'
 
 import galaxyTexture from '../textures/galaxy.jpg'
 
@@ -10,30 +10,17 @@ import { mutation, useStore } from '../state/useStore'
 import { COLORS } from '../constants'
 
 function Sun() {
-  const { clock, camera } = useThree()
+  const { clock } = useThree()
 
   const sun = useStore((s) => s.sun)
   const ship = useStore((s) => s.ship)
-  const level = useStore(s => s.level)
 
-  const sunColor = useMemo(() => new THREE.Color(1, 0.694, 0.168), [sun])
+  const sunColor = useMemo(() => new Color(1, 0.694, 0.168), [])
 
   useFrame((state, delta) => {
     if (ship.current) {
-      sun.current.position.z = ship.current.position.z - 1000
+      sun.current.position.z = ship.current.position.z - 2000
       sun.current.position.x = ship.current.position.x
-
-      // // TODO: implement
-      // if (level >= 0) {
-      //   sun.current.material.emissive.set(COLORS[mutation.colorLevel].three)
-      //   sun.current.material.color.set(COLORS[mutation.colorLevel].three)
-      // }
-
-      // if (mutation.gameSpeed > 1) {
-      //   sun.current.scale.x = mutation.gameSpeed
-      //   sun.current.scale.y = mutation.gameSpeed
-      //   sun.current.scale.z = mutation.gameSpeed
-      // }
     }
 
     sun.current.scale.x += Math.sin(clock.getElapsedTime() * 3) / 3000
@@ -41,9 +28,9 @@ function Sun() {
   })
 
   return (
-    <mesh ref={sun} scale={[1, 1, 1]} position={[0, 0, -1000]}>
-      <sphereGeometry attach="geometry" args={[200, 30, 30]} />
-      <meshPhongMaterial fog={false} emissive={sunColor} emissiveIntensity={1} attach="material" color="red" />
+    <mesh ref={sun} position={[0, 0, -2000]}>
+      <sphereGeometry attach="geometry" args={[300, 30, 30]} />
+      <meshStandardMaterial fog={false} emissive={sunColor} emissiveIntensity={1} attach="material" color={COLORS[1].three} />
     </mesh>
   )
 }
@@ -53,15 +40,19 @@ function Sky() {
   const sky = useRef()
   const stars = useRef()
 
-  const pointLight1 = useRef()
-  const pointLight2 = useRef()
-
   const ship = useStore((s) => s.ship)
+
+  useLayoutEffect(() => {
+    texture.wrapS = texture.wrapT = MirroredRepeatWrapping
+    texture.repeat.set(1.8, 1.8)
+    texture.anisotropy = 16
+  }, [texture])
 
 
   useFrame((state, delta) => {
     sky.current.rotation.z += delta * 0.02 * mutation.gameSpeed
     stars.current.rotation.z += delta * 0.02 * mutation.gameSpeed
+    sky.current.emissive = mutation.globalColor
 
     if (ship.current) {
       sky.current.position.x = ship.current.position.x
@@ -74,12 +65,11 @@ function Sky() {
 
   return (
     <>
-      <Stars ref={stars} radius={400} depth={50} count={20000} factor={20} saturation={1} fade />
-      <mesh ref={sky} scale={[-1, 1, 1]} position={[0, 10, -50]} rotation={[0, 0, 10]}>
-        <pointLight ref={pointLight1} position={[0, 5000, 0]} intensity={0.9} />
-        <pointLight ref={pointLight2} position={[0, -5000, 0]} intensity={0.9} />
-        <sphereGeometry attach="geometry" args={[1000, 10, 10]} />
-        <meshPhongMaterial fog={false} side={THREE.BackSide} attach="material" map={texture} />
+      <Stars ref={stars} radius={800} depth={100} count={10000} factor={40} saturation={1} fade />
+      <mesh ref={sky} position={[0, 10, -50]} rotation={[0, 0, Math.PI]}>
+        <hemisphereLight intensity={0.7} />
+        <sphereGeometry attach="geometry" args={[2000, 10, 10]} />
+        <meshPhongMaterial emissive={COLORS[0].three} emissiveIntensity={0.1} fog={false} side={BackSide} attach="material" map={texture} />
       </mesh>
     </>
   )
@@ -87,8 +77,6 @@ function Sky() {
 
 function Fog() {
   const fog = useRef()
-
-  const level = useStore(s => s.level)
 
   useFrame((state, delta) => {
     fog.current.near = 100

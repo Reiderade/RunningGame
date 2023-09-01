@@ -1,18 +1,17 @@
 import { Canvas } from '@react-three/fiber'
-import { Perf } from 'r3f-perf'
+import { Suspense } from 'react'
+import { Preload } from '@react-three/drei'
 
 import { useStore } from '../state/useStore'
 
 // THREE components
 import Ship from './Ship'
 import Ground from './Ground'
-import Effects from './Effects'
 import Skybox from './Skybox'
 import Cubes from './Cubes'
-import FixedCubes from './FixedCubes'
-import Chevrons from './Chevrons'
 import Walls from './Walls'
-import Arch from './Arch'
+import CubeTunnel from './CubeTunnel'
+import Effects from './Effects'
 
 // State/dummy components
 import KeyboardControls from './KeyboardControls'
@@ -32,30 +31,30 @@ export default function CubeWorld({ color, bgColor }) {
 
   return (
     <>
-      <Canvas dpr={[1, 1.5]} shadows style={{ background: `${bgColor}` }}>
-        <GameState />
-        <Skybox />
-        <directionalLight
-          ref={directionalLight}
-          intensity={3}
-          position={[0, Math.PI, 0]}
-        />
-        <ambientLight intensity={0.1} />
-        <Ship>
-          {directionalLight.current && <primitive object={directionalLight.current.target} />}
-        </Ship>
-        <Walls />
-        <Cubes />
-        <FixedCubes />
-        <Chevrons />
-        <Arch />
-        <Ground groundColor={bgColor} />
-        <Perf />
-        <KeyboardControls />
-        <Effects />
-        <GlobalColor />
-        <Music />
-        <Sound />
+      <Canvas gl={{ antialias: false, alpha: false }} dpr={[1, 2]} style={{ background: `${bgColor}` }}>
+        <Suspense fallback={null}>
+          <GameState />
+          <Skybox />
+          <directionalLight
+            ref={directionalLight}
+            intensity={3}
+            position={[0, Math.PI, 0]}
+          />
+          <ambientLight intensity={0.1} />
+          <Ship>
+            {directionalLight.current && <primitive object={directionalLight.current.target} />}
+          </Ship>
+          <Walls />
+          <Cubes />
+          <CubeTunnel />
+          <Ground groundColor={bgColor} />
+          <KeyboardControls />
+          <Effects />
+          <GlobalColor />
+          <Music />
+          <Sound />
+          <Preload all />
+        </Suspense>
       </Canvas>
       <Hud />
       <GameOverScreen />

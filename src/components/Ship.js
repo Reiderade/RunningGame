@@ -1,18 +1,17 @@
-import React, { useRef, useLayoutEffect, useEffect, Suspense } from 'react'
+import React, { useRef, useLayoutEffect, useEffect, Suspense, useState } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
-import { useGLTF, PerspectiveCamera, MeshDistortMaterial } from '@react-three/drei'
-import * as THREE from 'three'
-
-import EngineSparks from './EngineSparks'
+import { useGLTF, PerspectiveCamera, useTexture } from '@react-three/drei'
+import { MirroredRepeatWrapping, Vector2, Vector3 } from 'three'
 
 import shipModel from '../models/spaceship.gltf'
+
+import noiseTexture from '../textures/noise.png'
+import engineTexture from '../textures/enginetextureflip.png'
 
 
 import { useStore, mutation } from '../state/useStore'
 
-const v = new THREE.Vector3()
-
-// TODO: maybe tweak turn rates
+const v = new Vector3()
 
 function ShipModel(props, { children }) {
   const { nodes, materials } = useGLTF(shipModel)
@@ -23,12 +22,17 @@ function ShipModel(props, { children }) {
 
   const pointLight = useRef()
 
-  const outerExhaust = useRef()
-  const innerExhaust = useRef()
-  const engineSparks = useRef()
+  const innerConeExhaust = useRef()
+  const coneExhaust = useRef()
+  const outerConeExhaust = useRef()
+
+  const noise = useTexture(noiseTexture)
+  const exhaust = useTexture(engineTexture)
 
   const leftWingTrail = useRef()
   const rightWingTrail = useRef()
+
+  const bodyDetail = useRef()
 
   const { clock } = useThree()
 
@@ -49,26 +53,69 @@ function ShipModel(props, { children }) {
 
     camera.current.rotation.z = Math.PI
     ship.current.rotation.y = Math.PI
-  }, [])
+  }, [ship, camera])
 
   // turn off movement related parts when we arent moving
   useLayoutEffect(() => {
     if (!gameStarted || gameOver) {
-      outerExhaust.current.material.visible = false
-      innerExhaust.current.material.visible = false
+      innerConeExhaust.current.material.visible = false
+      coneExhaust.current.material.visible = false
+      outerConeExhaust.current.material.visible = false
       leftWingTrail.current.material.visible = false
       rightWingTrail.current.material.visible = false
-      engineSparks.current.material.visible = false
       pointLight.current.visible = false
     } else {
-      outerExhaust.current.material.visible = true
-      innerExhaust.current.material.visible = true
+      innerConeExhaust.current.material.visible = true
+      coneExhaust.current.material.visible = true
+      outerConeExhaust.current.material.visible = true
       leftWingTrail.current.material.visible = true
       rightWingTrail.current.material.visible = true
-      engineSparks.current.material.visible = true
       pointLight.current.visible = true
     }
   }, [gameStarted, gameOver])
+
+  useLayoutEffect(() => {
+    noise.wrapS = noise.wrapT = MirroredRepeatWrapping
+    noise.repeat.set(1, 1)
+    noise.anisotropy = 16
+
+    exhaust.wrapS = exhaust.wrapT = MirroredRepeatWrapping
+    exhaust.repeat.set(1, 1)
+    exhaust.anisotropy = 16
+  }, [noise, exhaust])
+
+  const [innerLathe] = useState(() => {
+    const points = [
+      new Vector2(0.2, 0.8),
+      new Vector2(0.1, 0),
+      new Vector2(0.3, 1.5),
+      new Vector2(0.4, 1.9),
+      new Vector2(0.01, 7)]
+
+    return points
+  })
+
+  const [mediumLathe] = useState(() => {
+    const points = [
+      new Vector2(0.2, 0),
+      new Vector2(0.5, 2),
+      new Vector2(0.01, 8)]
+
+    return points
+  })
+
+  const [lathe] = useState(() => {
+    const points = [
+      new Vector2(0.01, 0),
+      new Vector2(0.3, 0.8),
+      new Vector2(0.4, 1.5),
+      new Vector2(0.5, 1.9),
+      new Vector2(0.01, 9)]
+
+    return points
+  })
+
+  const innerConeScaleFactor = useRef(0.7)
 
   useFrame((state, delta) => {
     const accelDelta = 1 * delta * 2 // 1.5
@@ -81,10 +128,10 @@ function ShipModel(props, { children }) {
 
     const { left, right } = controlsRef.current
 
-    rightWingTrail.current.scale.x = fastSine / 100
-    rightWingTrail.current.scale.y = medSine / 100
-    leftWingTrail.current.scale.x = fastSine / 100
-    leftWingTrail.current.scale.y = medSine / 100
+    rightWingTrail.current.scale.x = fastSine / 50
+    rightWingTrail.current.scale.y = medSine / 50
+    leftWingTrail.current.scale.x = fastSine / 50
+    leftWingTrail.current.scale.y = medSine / 50
 
     // Forward Movement
     ship.current.position.z -= mutation.gameSpeed * delta * 165
@@ -158,19 +205,39 @@ function ShipModel(props, { children }) {
       }
     }
 
-    pointLight.current.intensity = 10 + (fastSine * 5)
-    outerExhaust.current.scale.x = 0.15 + fastSine / 15
-    outerExhaust.current.scale.y = 0.30 + slowSine / 10
-    innerExhaust.current.scale.x = 0.10 + fastSine / 15
-    innerExhaust.current.scale.y = 0.25 + slowSine / 10
+    pointLight.current.intensity = 20 - (fastSine / 15)
+
+    outerConeExhaust.current.material.map.offset.y += 0.01 * (0.4 + mutation.gameSpeed) * delta * 165
+    coneExhaust.current.material.map.offset.y -= 0.01 * (0.4 + mutation.gameSpeed) * delta * 165
 
     if (mutation.desiredSpeed > mutation.gameSpeed) {
-      pointLight.current.intensity = 30 + (fastSine * 5)
-      outerExhaust.current.scale.x = 0.25 + fastSine / 15
-      outerExhaust.current.scale.y = 0.35 + slowSine / 10
-      innerExhaust.current.scale.x = 0.15 + fastSine / 15
-      innerExhaust.current.scale.y = 0.30 + slowSine / 10
+      pointLight.current.intensity = 30 - (fastSine / 15)
+
+      if (innerConeScaleFactor.current < 0.95) {
+        if (innerConeScaleFactor.current + 0.005 * delta * 165 > 0.95) {
+          innerConeScaleFactor.current = 0.95
+        } else {
+          innerConeScaleFactor.current += 0.005 * delta * 165
+        }
+      }
+    } else {
+      if (innerConeScaleFactor.current > 0.7) {
+        if (innerConeScaleFactor.current - 0.005 * delta * 165 < 0.7) {
+          innerConeScaleFactor.current = 0.7
+        } else {
+          innerConeScaleFactor.current -= 0.005 * delta * 165
+        }
+      }
     }
+
+    innerConeExhaust.current.scale.z = fastSine / 15
+    innerConeExhaust.current.scale.x = innerConeScaleFactor.current + fastSine / 15
+    coneExhaust.current.scale.z = fastSine / 15
+    coneExhaust.current.scale.x = 0.85 + fastSine / 15
+    outerConeExhaust.current.scale.z = 0.9 + fastSine / 15
+    outerConeExhaust.current.scale.x = 0.9 + fastSine / 15
+
+    bodyDetail.current.material.color = mutation.globalColor
   })
 
   return (
@@ -187,8 +254,8 @@ function ShipModel(props, { children }) {
           <meshBasicMaterial attach="material" color="orange" />
         </mesh>
         <mesh receiveShadow castShadow geometry={nodes.Ship_Body_3.geometry} material={materials['Gray Metal']} />
-        <mesh geometry={nodes.Ship_Body_4.geometry}>
-          <meshBasicMaterial attach="material" color="white" />
+        <mesh ref={bodyDetail} geometry={nodes.Ship_Body_4.geometry}>
+          <meshLambertMaterial attach="material" color="white" />
         </mesh>
         <mesh ref={leftWingTrail} scale={[0.1, 0.05, 2]} position={[1.4, 0.2, -7]}>
           <dodecahedronBufferGeometry args={[1.5, 3]} />
@@ -198,15 +265,18 @@ function ShipModel(props, { children }) {
           <dodecahedronBufferGeometry args={[1.5, 3]} />
           <meshBasicMaterial transparent opacity={0.8} color="white" />
         </mesh>
-        <mesh ref={outerExhaust} scale={[0.1, 0.05, 2]} position={[0, -0.3, -4]}>
-          <dodecahedronBufferGeometry args={[1.5, 3]} />
-          <MeshDistortMaterial speed={2} distort={0.2} radius={1} transparent opacity={0.6} color="red" />
+        <mesh visible={true} ref={innerConeExhaust} position={[0, -0.3, 0.3]} rotation={[Math.PI / 2, 0, Math.PI]}>
+          <latheBufferGeometry args={[innerLathe, 20]} />
+          <meshLambertMaterial transparent opacity={1} color="white" />
         </mesh>
-        <mesh ref={innerExhaust} scale={[0.1, 0.05, 2]} position={[0, -0.3, -4]}>
-          <dodecahedronBufferGeometry args={[1.5, 3]} />
-          <meshBasicMaterial color="white" />
+        <mesh visible={true} ref={coneExhaust} position={[0, -0.3, 0.25]} rotation={[Math.PI / 2, 0, Math.PI]}>
+          <latheBufferGeometry args={[mediumLathe, 30]} />
+          <meshLambertMaterial transparent opacity={0.8} map={noise} color={0xAAAAAA} emissive="red" emissiveIntensity={1} />
         </mesh>
-        <EngineSparks position={[0, -2, -4]} ref={engineSparks} />
+        <mesh visible={true} ref={outerConeExhaust} position={[0, -0.3, 0]} rotation={[Math.PI / 2, 0, Math.PI]}>
+          <latheBufferGeometry args={[lathe, 50]} />
+          <meshLambertMaterial transparent alphaMap={exhaust} map={exhaust} color="hotpink" />
+        </mesh>
       </group>
     </>
   )

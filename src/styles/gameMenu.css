@@ -3,6 +3,12 @@
   src: local('Road Rage'), url(../fonts/Road_Rage.otf) format('opentype');
 }
 
+@font-face {
+  font-family: 'Commando';
+  src: local('Commando'), url(../fonts/commando.ttf) format('truetype');
+}
+
+
 .game__container {
   position: absolute;
   top: 0;
@@ -19,17 +25,20 @@
   }
 
 .game__subcontainer {
-  margin-top: 2rem;
+  margin: 2rem;
+  text-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  height: 10rem;
+  justify-content: space-between;
+  height: 100%;
 }
 
 .game__logo {
-  height: 512px;
+  max-width: 100%;
+  max-height: 100%;
   width: 1024px;
+  margin-top: 30%;
 }
 
 .game__logo-small {
@@ -42,6 +51,12 @@
   align-items: center;
   justify-content: center;
   flex-direction: column;
+  height: 100%;
+}
+
+.game__menu-options {
+  display: flex;
+  flex-direction: column;
 }
 
 .game__score-gameover {
@@ -50,6 +65,7 @@
   font-size: 12rem;
   text-shadow: 0 0 10px #fe2079;
   margin: 0;
+  margin-bottom: 2rem;
 }
 
 .game__score-title {
@@ -60,6 +76,7 @@
   text-align: center;
   text-shadow: 0 0 40px #fe2079;
   margin: 0;
+  margin-bottom: 1rem;
 }
 
 .game__score {
@@ -72,15 +89,63 @@
   margin: 0;
 }
 
+.game__scorecontainer {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  text-shadow: 0 0 20px #fe2079;
+  margin-bottom: 2rem;
+}
+
+.game__score-highscore {
+  font-size: 3rem;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding-left: 2rem;
+  padding-right: 2rem;
+  color: #eee;
+  font-family: 'Commando', Inconsolata, monospace;
+}
+
+.game__score-number {
+  color: #fe2079;
+  margin-right: 1rem;
+}
+
+.game__score-left {
+  margin-right: 10rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.game__score-right {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
 .game__menu-button {
-  margin-top: 2rem;
+  margin-bottom: 2rem;
   background: none;
   border-radius: 20px;
   border: 0;
   font-family: 'Road Rage', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-  font-size: 5rem;
+  font-size: 6rem;
   color: #fe2079;
   text-shadow: 0 0 40px #fe2079;
+}
+
+.game__menu-button-music {
+  font-size: 3.5rem;
+}
+
+.game__menu-warning {
+  font-family: 'Commando', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  font-size: 1.5rem;
+  color: #fe2079;
+  text-shadow: 0 0 20px #fe2079;
 }
 
 .game__menu-button:hover {
@@ -89,7 +154,7 @@
 }
 
 
-@media screen and (max-width: 992px) {
+@media screen and (max-width: 992px), (max-height: 1080px) {
 .game__logo {
   height: 360px;
   width: 720px;
@@ -102,6 +167,14 @@
 
 .game__menu-button {
   font-size: 4rem;
+  text-shadow: 0 0 15px #fe2079;
+}
+
+.game__menu-button-music {
+  font-size: 2rem;
+}
+
+.game__menu-warning {
   text-shadow: 0 0 15px #fe2079;
 }
 
@@ -119,7 +192,21 @@
 }
 }
 
-@media screen and (max-width: 600px) {
+@media screen and (max-width: 600px), (max-height: 700px) {
+  .game__scorecontainer {
+  flex-direction: column;
+  justify-content: center;
+  }
+
+.game__score-left {
+    margin-right: 0;
+    margin-bottom: 1rem;
+  }
+
+  .game__score-highscore {
+    font-size: 2.5rem;
+  }
+
 .game__logo {
   height: 175px;
   width: 350px;
@@ -135,18 +222,28 @@
   text-shadow: 0 0 15px #fe2079;
 }
 
+.game__menu-button-music {
+  font-size: 2rem;
+}
+
+.game__menu-warning {
+  font-size: 1rem;
+  text-shadow: 0 0 15px #fe2079;
+}
+
 .game__score-gameover {
   font-size: 4rem;
   text-shadow: 0 0 10px #fe2079;
+  margin-bottom: 1rem;
 }
 
 .game__score-title {
-  font-size: 2.5rem;
-    text-shadow: 0 0 5px #fe2079;
+  font-size: 2rem;
+  text-shadow: 0 0 5px #fe2079;
 }
 
 .game__score {
-  font-size: 5rem;
+  font-size: 4rem;
   text-shadow: 0 0 10px #fe2079;
 }
 }

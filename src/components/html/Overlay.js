@@ -8,7 +8,7 @@ import cubeRunLogo from '../../textures/cuberun-logo.png'
 
 import '../../styles/gameMenu.css'
 
-import { useStore, mutation } from '../../state/useStore'
+import { useStore } from '../../state/useStore'
 
 const Overlay = () => {
   const [shown, setShown] = useState(true)
@@ -19,7 +19,7 @@ const Overlay = () => {
   const gameOver = useStore(s => s.gameOver)
   const setGameStarted = useStore(s => s.setGameStarted)
   const musicEnabled = useStore(s => s.musicEnabled)
-  const toggleMusic = useStore(s => s.toggleMusic)
+  const enableMusic = useStore(s => s.enableMusic)
 
   useEffect(() => {
     if (gameStarted || gameOver) {
@@ -35,12 +35,16 @@ const Overlay = () => {
     return () => clearTimeout(t)
   }, [active, opaque])
 
+  useEffect(() => {
+    localStorage.setItem('musicEnabled', JSON.stringify(musicEnabled))
+  }, [musicEnabled])
+
   const handleStart = () => {
     setGameStarted(true)
   }
 
   const handleMusic = () => {
-    toggleMusic()
+    enableMusic(!musicEnabled)
   }
 
   return shown ? (
@@ -53,13 +57,16 @@ const Overlay = () => {
           ) : (
             <>
               <button onClick={handleStart} className="game__menu-button">START</button>
-              <button onClick={handleMusic} className="game__menu-button">MUSIC {musicEnabled ? 'OFF' : 'ON'}</button>
-              <Author />
+              <div className="game__menu-options">
+                <button onClick={handleMusic} className="game__menu-button game__menu-button-music">MUSIC {musicEnabled ? 'OFF' : 'ON'}</button>
+                <span className="game__menu-warning">Photosensitivity warning - Game contains flashing lights</span>
+                <Author />
+              </div>
             </>
           )}
         </div>
       </div>
-    </div>
+    </div >
   ) : null
 }
 
