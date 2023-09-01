@@ -1,6 +1,16 @@
 import * as THREE from 'three'
 
-export const PLANE_SIZE = 1024
+/**
+ * The size of each ground plane in meters, 1000 is fine
+ */
+export const PLANE_SIZE = 1000
+
+/**
+ * How many ground planes must we traverse per level, default 6
+ */
+export const LEVEL_SIZE = 6
+
+export const CUBE_SIZE = 20
 
 export const CUBE_AMOUNT = 100
 
@@ -8,40 +18,47 @@ export const INITIAL_GAME_SPEED = 0.6
 
 export const GAME_SPEED_MULTIPLIER = 0.3
 
+export const WALL_RADIUS = 40
+
 export const COLORS = [
   {
+    name: 'pink',
+    hex: '#ff69b4',
+    three: new THREE.Color(0xff2190)
+  },
+  {
     name: 'red',
-    hex: '#ff0000',
-    three: new THREE.Color(0xff0000)
+    hex: '#ff2919',
+    three: new THREE.Color(0xff2919) //  0xff3021 #ff1e0d
   },
   {
     name: 'orange',
-    hex: '#FFA500',
-    three: new THREE.Color(0xFFA500)
+    hex: '#bd4902',
+    three: new THREE.Color(0xbd4902) //0xcc4e00
   },
   {
     name: 'green',
-    hex: '#3cff00',
-    three: new THREE.Color(0x3cff00)
+    hex: '#26a300',
+    three: new THREE.Color(0x26a300) // 0x2ec200
   },
   {
     name: 'blue',
-    hex: '#0066ff',
-    three: new THREE.Color(0x0066ff)
+    hex: '#217aff',
+    three: new THREE.Color(0x2069d6)
   },
   {
     name: 'purple',
     hex: '#9370D8',
-    three: new THREE.Color(0x9370D8)
-  },
-  {
-    name: 'pink',
-    hex: '#ff69b4',
-    three: new THREE.Color(0xff69b4)
+    three: new THREE.Color(0x6942b8)
   },
   {
     name: 'white',
     hex: '#ffffff',
-    three: new THREE.Color(0xffffff)
+    three: new THREE.Color(0x6b6b6b) // 0x828282
+  },
+  {
+    name: 'black',
+    hex: '#000000',
+    three: new THREE.Color(0xCCCCCC)
   }
 ]

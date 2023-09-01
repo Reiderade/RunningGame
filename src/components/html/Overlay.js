@@ -2,6 +2,7 @@ import { useProgress } from '@react-three/drei'
 import { useState, useEffect } from 'react'
 
 import Loader from './CustomLoader'
+import Author from './Author'
 
 import cubeRunLogo from '../../textures/cuberun-logo.png'
 
@@ -17,7 +18,7 @@ const Overlay = () => {
   const gameStarted = useStore(s => s.gameStarted)
   const gameOver = useStore(s => s.gameOver)
   const setGameStarted = useStore(s => s.setGameStarted)
-  const music = useStore(s => s.music)
+  const musicEnabled = useStore(s => s.musicEnabled)
   const toggleMusic = useStore(s => s.toggleMusic)
 
   useEffect(() => {
@@ -26,13 +27,13 @@ const Overlay = () => {
     } else if (!gameStarted) {
       setShown(true)
     }
-  }, [gameStarted, active])
+  }, [gameStarted, active, gameOver])
 
   useEffect(() => {
     let t
     if (active !== opaque) t = setTimeout(() => setOpaque(active), 300)
     return () => clearTimeout(t)
-  }, [active])
+  }, [active, opaque])
 
   const handleStart = () => {
     setGameStarted(true)
@@ -52,7 +53,8 @@ const Overlay = () => {
           ) : (
             <>
               <button onClick={handleStart} className="game__menu-button">START</button>
-              <button onClick={handleMusic} className="game__menu-button">MUSIC {music ? 'OFF' : 'ON'}</button>
+              <button onClick={handleMusic} className="game__menu-button">MUSIC {musicEnabled ? 'OFF' : 'ON'}</button>
+              <Author />
             </>
           )}
         </div>

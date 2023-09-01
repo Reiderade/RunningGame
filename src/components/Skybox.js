@@ -5,24 +5,39 @@ import * as THREE from 'three'
 
 import galaxyTexture from '../textures/galaxy.jpg'
 
-import { useStore } from '../state/useStore'
+import { mutation, useStore } from '../state/useStore'
+
+import { COLORS } from '../constants'
 
 function Sun() {
   const { clock, camera } = useThree()
 
   const sun = useStore((s) => s.sun)
   const ship = useStore((s) => s.ship)
+  const level = useStore(s => s.level)
 
   const sunColor = useMemo(() => new THREE.Color(1, 0.694, 0.168), [sun])
 
   useFrame((state, delta) => {
-    sun.current.scale.x += Math.sin(clock.getElapsedTime() * 3) / 3000
-    sun.current.scale.y += Math.sin(clock.getElapsedTime() * 3) / 3000
-
     if (ship.current) {
       sun.current.position.z = ship.current.position.z - 1000
       sun.current.position.x = ship.current.position.x
+
+      // // TODO: implement
+      // if (level >= 0) {
+      //   sun.current.material.emissive.set(COLORS[mutation.colorLevel].three)
+      //   sun.current.material.color.set(COLORS[mutation.colorLevel].three)
+      // }
+
+      // if (mutation.gameSpeed > 1) {
+      //   sun.current.scale.x = mutation.gameSpeed
+      //   sun.current.scale.y = mutation.gameSpeed
+      //   sun.current.scale.z = mutation.gameSpeed
+      // }
     }
+
+    sun.current.scale.x += Math.sin(clock.getElapsedTime() * 3) / 3000
+    sun.current.scale.y += Math.sin(clock.getElapsedTime() * 3) / 3000
   })
 
   return (
@@ -38,12 +53,15 @@ function Sky() {
   const sky = useRef()
   const stars = useRef()
 
+  const pointLight1 = useRef()
+  const pointLight2 = useRef()
+
   const ship = useStore((s) => s.ship)
 
 
   useFrame((state, delta) => {
-    sky.current.rotation.z += delta / 50
-    stars.current.rotation.z += delta / 50
+    sky.current.rotation.z += delta * 0.02 * mutation.gameSpeed
+    stars.current.rotation.z += delta * 0.02 * mutation.gameSpeed
 
     if (ship.current) {
       sky.current.position.x = ship.current.position.x
@@ -58,12 +76,28 @@ function Sky() {
     <>
       <Stars ref={stars} radius={400} depth={50} count={20000} factor={20} saturation={1} fade />
       <mesh ref={sky} scale={[-1, 1, 1]} position={[0, 10, -50]} rotation={[0, 0, 10]}>
-        <pointLight position={[0, 5000, 0]} intensity={0.9} />
-        <pointLight position={[0, -5000, 0]} intensity={0.9} />
+        <pointLight ref={pointLight1} position={[0, 5000, 0]} intensity={0.9} />
+        <pointLight ref={pointLight2} position={[0, -5000, 0]} intensity={0.9} />
         <sphereGeometry attach="geometry" args={[1000, 10, 10]} />
         <meshPhongMaterial fog={false} side={THREE.BackSide} attach="material" map={texture} />
       </mesh>
     </>
+  )
+}
+
+function Fog() {
+  const fog = useRef()
+
+  const level = useStore(s => s.level)
+
+  useFrame((state, delta) => {
+    fog.current.near = 100
+    fog.current.far = 800
+    fog.current.color = mutation.globalColor
+  })
+
+  return (
+    <fog ref={fog} attach="fog" args={['#bf6c00', 600, 800]} />
   )
 }
 
@@ -74,7 +108,7 @@ export default function Skybox() {
     <Suspense fallback={null}>
       <Sun />
       <Sky />
-      <fog attach="fog" args={['#bf6c00', 10, 500]} />
+      <Fog />
     </Suspense>
   )
 }

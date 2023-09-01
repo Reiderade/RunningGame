@@ -34,8 +34,14 @@ const EngineSparks = forwardRef((_, mesh) => {
 
       dummy.scale.set(0.1, 0.1, 5)
 
+
+
       spark.x += Math.sin(clock.getElapsedTime() * spark.speedFactor * 10) / 100
       spark.y -= Math.sin(clock.getElapsedTime() * spark.speedFactor * 10) / 100
+
+      if (mutation.desiredSpeed > mutation.gameSpeed) {
+        dummy.scale.set(0.2, 0.2, 10)
+      }
 
       dummy.position.set(
         spark.x,
@@ -53,7 +59,7 @@ const EngineSparks = forwardRef((_, mesh) => {
   })
 
   return (
-    <instancedMesh ref={mesh} args={[null, null, 50]}>
+    <instancedMesh ref={mesh} args={[null, null, 20]}>
       <sphereBufferGeometry args={[0.2]} />
       <meshBasicMaterial color="tomato" />
     </instancedMesh>

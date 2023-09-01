@@ -2,14 +2,12 @@ import * as THREE from 'three'
 import { useRef, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
 
-import { CUBE_AMOUNT, CUBE_SIZE, PLANE_SIZE, COLORS, WALL_RADIUS, LEVEL_SIZE } from '../constants'
+import { PLANE_SIZE, COLORS, LEVEL_SIZE } from '../constants'
 import { useStore, mutation } from '../state/useStore'
 
-import randomInRange from '../util/randomInRange'
 import distance2D from '../util/distance2D'
+import { generateCubeTunnel, generateDiamond } from '../util/generateFixedCubes'
 
-const negativeBound = -(PLANE_SIZE / 2) + WALL_RADIUS / 2
-const positiveBound = (PLANE_SIZE / 2) - WALL_RADIUS / 2
 
 export default function InstancedCubes() {
   const mesh = useRef()
@@ -18,14 +16,17 @@ export default function InstancedCubes() {
   const ship = useStore(s => s.ship)
   const level = useStore(s => s.level)
 
+  const tunnelCoords = useMemo(() => generateCubeTunnel(), [])
+  const diamondCoords = useMemo(() => generateDiamond(), [])
+
   const dummy = useMemo(() => new THREE.Object3D(), [])
   const cubes = useMemo(() => {
     // Setup initial cube positions
     const temp = []
-    for (let i = 0; i < CUBE_AMOUNT; i++) {
-      const x = randomInRange(negativeBound, positiveBound)
-      const y = 10
-      const z = -900 + randomInRange(-400, 100)
+    for (let i = 0; i < diamondCoords.length; i++) {
+      const x = tunnelCoords[i]?.x || 0
+      const y = tunnelCoords[i]?.y || 0
+      const z = 300 + tunnelCoords[i]?.z || 10
 
       temp.push({ x, y, z })
     }
@@ -42,20 +43,15 @@ export default function InstancedCubes() {
           mutation.gameOver = true
         }
 
-
-        if (cube.z - ship.current.position.z > 15) {
-          const currentLevelZPos = -(level * PLANE_SIZE * LEVEL_SIZE) // 4
-          const diamondStart = currentLevelZPos - PLANE_SIZE * (LEVEL_SIZE - 2.5) // 1.5
-          const diamondEnd = currentLevelZPos - PLANE_SIZE * (LEVEL_SIZE) // 3
-
-          if (ship.current.position.z > diamondStart || ship.current.position.z < diamondEnd) {
-            cube.z = ship.current.position.z - PLANE_SIZE + randomInRange(-500, 0)
-            cube.x = randomInRange(negativeBound, positiveBound)
-          } else {
-            cube.z = ship.current.position.z - (PLANE_SIZE * 3) + randomInRange(-500, 300)
-            cube.x = randomInRange(negativeBound, positiveBound)
-          }
+        if (ship.current.position.z < -PLANE_SIZE && ship.current.position.z < -(level * PLANE_SIZE * LEVEL_SIZE)) { // 4
+          cube.x = diamondCoords[i].x
+          cube.y = diamondCoords[i].y
+          cube.z = -(level * PLANE_SIZE * LEVEL_SIZE) - PLANE_SIZE * (LEVEL_SIZE - 2) + diamondCoords[i].z
         }
+        // if (cube.z - ship.current.position.z > 15) {
+        //   cube.z = ship.current.position.z - 800 // + randomInRange(-400, 400)
+        //   cube.x = randomInRange(negativeBound, positiveBound)
+        // }
       }
 
       material.current.color = mutation.globalColor
@@ -76,8 +72,8 @@ export default function InstancedCubes() {
   })
 
   return (
-    <instancedMesh ref={mesh} args={[null, null, CUBE_AMOUNT]}>
-      <boxBufferGeometry args={[CUBE_SIZE, CUBE_SIZE, CUBE_SIZE]} />
+    <instancedMesh ref={mesh} args={[null, null, diamondCoords.length]}>
+      <boxBufferGeometry args={[20, 20, 20]} />
       <meshBasicMaterial ref={material} color={COLORS[0].three} />
     </instancedMesh>
   )

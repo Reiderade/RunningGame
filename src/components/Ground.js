@@ -13,7 +13,6 @@ import gridBlue from '../textures/grid-blue.png'
 import gridPurple from '../textures/grid-purple.png'
 import gridPink from '../textures/grid-pink.png'
 import gridRainbow from '../textures/grid-rainbow.png'
-import gridWhite from '../textures/grid-white.png'
 
 const TEXTURE_SIZE = PLANE_SIZE * 0.075
 const MOVE_DISTANCE = PLANE_SIZE * 2
@@ -27,9 +26,10 @@ function Ground() {
   const plane = useRef()
   const planeTwo = useRef()
 
-  const textures = useTexture([gridRed, gridOrange, gridGreen, gridBlue, gridPurple, gridPink, gridRainbow, gridWhite])
+  const textures = useTexture([gridPink, gridRed, gridOrange, gridGreen, gridBlue, gridPurple, gridRainbow])
 
-  const ship = useStore((s) => s.ship)
+  const ship = useStore(s => s.ship)
+  const incrementLevel = useStore(s => s.incrementLevel)
 
   useLayoutEffect(() => {
     textures.forEach(texture => {
@@ -43,9 +43,6 @@ function Ground() {
   const lastMove = useRef(0)
   const { clock } = useThree()
   useFrame((state, delta) => {
-    const mySine = Math.sin(clock.getElapsedTime())
-
-    plane.current.material.emissiveIntensity = (mySine + 1) / 2
 
     if (ship.current) {
       // Alternates moving the two ground planes when we've just passed over onto a new plane, with logic to make sure it only happens once per pass
@@ -55,27 +52,51 @@ function Ground() {
         // Ensures we only move the plane once per pass
         if (moveCounter.current === 1 || Math.abs(ship.current.position.z) - Math.abs(lastMove.current) <= 10) {
 
-          // change the grid color every 4 moves or 4000 meters
-          if (moveCounter.current % 4 === 0) {
-            mutation.level++
+          // change the level every 4 moves or 4000 meters
+          if (moveCounter.current % 6 === 0) {
+            incrementLevel()
+            mutation.colorLevel++
             mutation.desiredSpeed += GAME_SPEED_MULTIPLIER
-            if (mutation.level > textures.length) {
-              mutation.level = 0
+
+            if (mutation.colorLevel >= textures.length) {
+              mutation.colorLevel = 0
             }
           }
 
           if (moveCounter.current % 2 === 0) {
             groundTwo.current.position.z -= MOVE_DISTANCE
             lastMove.current = groundTwo.current.position.z
-            planeTwo.current.material.map = textures[mutation.level]
+            planeTwo.current.material.map = textures[mutation.colorLevel]
           } else {
             ground.current.position.z -= MOVE_DISTANCE
             lastMove.current = ground.current.position.z
-            plane.current.material.map = textures[mutation.level]
+            plane.current.material.map = textures[mutation.colorLevel]
           }
         }
 
         moveCounter.current++
+      }
+    }
+
+
+    // handles changing ground color between levels (really interpolating the emissiveness and changing the emissive map around)
+    if (mutation.colorLevel > 0) {
+      if (plane.current.material.map.uuid !== planeTwo.current.material.map.uuid) {
+        if (plane.current.material.emissiveIntensity < 1) {
+          if (plane.current.material.emissiveIntensity + delta * mutation.gameSpeed > 1) {
+            plane.current.material.emissiveIntensity = 1
+          } else {
+            plane.current.material.emissiveIntensity += delta * mutation.gameSpeed
+          }
+        } else {
+          plane.current.material.map = textures[mutation.colorLevel]
+          if (mutation.colorLevel === textures.length - 1) {
+            plane.current.material.emissiveMap = textures[0]
+          } else {
+            plane.current.material.emissiveMap = textures[mutation.colorLevel + 1]
+          }
+          plane.current.material.emissiveIntensity = 0
+        }
       }
     }
   })
@@ -96,7 +117,7 @@ function Ground() {
             color={color.set(0xFFFFFF)}
             emissiveMap={textures[1]}
             emissive={color.set(0xFFFFFF)}
-            emissiveIntensity={1}
+            emissiveIntensity={0}
             attach="material"
             map={textures[0]}
             roughness={1}
@@ -119,7 +140,6 @@ function Ground() {
             map={textures[0]}
             roughness={1}
             metalness={0}
-            roughness={1}
           />
         </mesh>
       </group>

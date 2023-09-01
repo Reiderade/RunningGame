@@ -12,6 +12,8 @@ import { useStore, mutation } from '../state/useStore'
 
 const v = new THREE.Vector3()
 
+// TODO: maybe tweak turn rates
+
 function ShipModel(props, { children }) {
   const { nodes, materials } = useGLTF(shipModel)
 
@@ -30,6 +32,9 @@ function ShipModel(props, { children }) {
 
   const { clock } = useThree()
 
+  const gameStarted = useStore(s => s.gameStarted)
+  const gameOver = useStore(s => s.gameOver)
+
   // subscribe to controller updates on mount
   const controlsRef = useRef(useStore.getState().controls)
   useEffect(() => useStore.subscribe(
@@ -46,10 +51,27 @@ function ShipModel(props, { children }) {
     ship.current.rotation.y = Math.PI
   }, [])
 
+  // turn off movement related parts when we arent moving
+  useLayoutEffect(() => {
+    if (!gameStarted || gameOver) {
+      outerExhaust.current.material.visible = false
+      innerExhaust.current.material.visible = false
+      leftWingTrail.current.material.visible = false
+      rightWingTrail.current.material.visible = false
+      engineSparks.current.material.visible = false
+      pointLight.current.visible = false
+    } else {
+      outerExhaust.current.material.visible = true
+      innerExhaust.current.material.visible = true
+      leftWingTrail.current.material.visible = true
+      rightWingTrail.current.material.visible = true
+      engineSparks.current.material.visible = true
+      pointLight.current.visible = true
+    }
+  }, [gameStarted, gameOver])
+
   useFrame((state, delta) => {
-    const bigDelta = 1 * delta * 10.0
-    const smallDelta = 1 * delta * 2.0
-    const accelDelta = 1 * delta * 1.5
+    const accelDelta = 1 * delta * 2 // 1.5
 
     const time = clock.getElapsedTime()
 
@@ -77,7 +99,7 @@ function ShipModel(props, { children }) {
     // Curving during turns
     ship.current.rotation.z = mutation.horizontalVelocity * 1.5
     ship.current.rotation.y = Math.PI - mutation.horizontalVelocity * 0.4
-    ship.current.rotation.x = Math.abs(mutation.horizontalVelocity) / 10 // max/min velocity is -0.5/0.5, divide by ten to get our desired max rotation of 0.05
+    ship.current.rotation.x = -Math.abs(mutation.horizontalVelocity) / 10 // max/min velocity is -0.5/0.5, divide by ten to get our desired max rotation of 0.05
 
     // Ship Jitter - small incidental movements
     ship.current.position.y -= slowSine / 200
@@ -116,7 +138,7 @@ function ShipModel(props, { children }) {
 
     if (!mutation.gameOver && mutation.gameSpeed > 0) {
       if ((left && !right)) {
-        mutation.horizontalVelocity = Math.max(-0.5, mutation.horizontalVelocity - accelDelta)
+        mutation.horizontalVelocity = Math.max(-0.7 /* -0.5 */, mutation.horizontalVelocity - accelDelta)
 
         // wing trail
         rightWingTrail.current.scale.x = fastSine / 30
@@ -126,7 +148,7 @@ function ShipModel(props, { children }) {
       }
 
       if ((!left && right)) {
-        mutation.horizontalVelocity = Math.min(0.5, mutation.horizontalVelocity + accelDelta)
+        mutation.horizontalVelocity = Math.min(0.7 /* 0.7 */, mutation.horizontalVelocity + accelDelta)
 
         // wing trail
         leftWingTrail.current.scale.x = fastSine / 30
@@ -141,6 +163,14 @@ function ShipModel(props, { children }) {
     outerExhaust.current.scale.y = 0.30 + slowSine / 10
     innerExhaust.current.scale.x = 0.10 + fastSine / 15
     innerExhaust.current.scale.y = 0.25 + slowSine / 10
+
+    if (mutation.desiredSpeed > mutation.gameSpeed) {
+      pointLight.current.intensity = 30 + (fastSine * 5)
+      outerExhaust.current.scale.x = 0.25 + fastSine / 15
+      outerExhaust.current.scale.y = 0.35 + slowSine / 10
+      innerExhaust.current.scale.x = 0.15 + fastSine / 15
+      innerExhaust.current.scale.y = 0.30 + slowSine / 10
+    }
   })
 
   return (
